@@ -1,0 +1,164 @@
+# Docker Setup with Database, Authentication, Role-Based Access & Student Accommodations
+
+### Dockerfile
+```
+# Use Node.js base image
+FROM node:18-alpine
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files and install dependencies
+COPY package.json package-lock.json ./
+RUN npm install
+
+# Copy the rest of the application
+COPY . .
+
+# Expose the port the app runs on
+EXPOSE 3000
+
+# Start the application
+CMD ["npm", "run", "dev"]
+```
+
+### docker-compose.yml
+```
+version: '3.8'
+
+services:
+  student-iep:
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=mongodb://mongo:27017/studentIEP
+      - JWT_SECRET=supersecretkey
+    depends_on:
+      - mongo
+    command: npm run dev
+
+  mongo:
+    image: mongo:latest
+    container_name: mongo_db
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mongo_data:
+```
+
+### Connecting MongoDB in the App
+You'll need to install **Mongoose, JWT, Role-Based Middleware & Refresh Tokens**:
+```
+npm install mongoose jsonwebtoken bcryptjs express cors dotenv express-session
+```
+
+Modify your **backend authentication API with roles and accommodations**:
+```javascript
+import mongoose from 'mongoose';
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
+import express from 'express';
+import dotenv from 'dotenv';
+import cors from 'cors';
+import session from 'express-session';
+
+dotenv.config();
+const app = express();
+app.use(express.json());
+app.use(cors());
+app.use(session({ secret: process.env.JWT_SECRET, resave: false, saveUninitialized: true }));
+
+const userSchema = new mongoose.Schema({
+  username: String,
+  password: String,
+  role: { type: String, enum: ['student', 'admin'], default: 'student' },
+  accommodations: [{ type: String }],
+});
+const User = mongoose.model("User", userSchema);
+
+const authMiddleware = (roles) => (req, res, next) => {
+  const token = req.headers.authorization?.split(" ")[1];
+  if (!token) return res.status(401).json({ message: "Unauthorized" });
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (!roles.includes(decoded.role)) return res.status(403).json({ message: "Forbidden" });
+    req.user = decoded;
+    next();
+  } catch {
+    res.status(401).json({ message: "Invalid token" });
+  }
+};
+
+app.post("/register", async (req, res) => {
+  const { username, password, role, accommodations } = req.body;
+  const hashedPassword = await bcrypt.hash(password, 10);
+  const user = new User({ username, password: hashedPassword, role, accommodations });
+  await user.save();
+  res.json({ message: "User registered successfully" });
+});
+
+app.post("/login", async (req, res) => {
+  const { username, password } = req.body;
+  const user = await User.findOne({ username });
+  if (!user || !(await bcrypt.compare(password, user.password))) {
+    return res.status(401).json({ message: "Invalid credentials" });
+  }
+  const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: "1h" });
+  res.json({ token, role: user.role, accommodations: user.accommodations });
+});
+
+app.get("/admin", authMiddleware(['admin']), (req, res) => {
+  res.json({ message: "Admin access granted" });
+});
+
+app.post("/update-accommodations", authMiddleware(['admin', 'student']), async (req, res) => {
+  const { accommodations } = req.body;
+  await User.findByIdAndUpdate(req.user.id, { accommodations });
+  res.json({ message: "Accommodations updated" });
+});
+
+mongoose.connect(process.env.DATABASE_URL, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+}).then(() => app.listen(3001, () => console.log("Auth Server running on port 3001")));
+```
+
+Now your app supports **accommodations for students with emotional disturbance**! 🎓
+
+## Setting Up with GitHub Codespaces
+
+### **1️⃣ Push Your Code to GitHub**
+```
+git add .
+git commit -m "Added student accommodations & refresh tokens"
+git push origin main
+```
+
+### **2️⃣ Open in GitHub Codespaces**
+1. Go to **your GitHub repo**
+2. Click `Code` → `Open with Codespaces`
+3. Wait for the environment to initialize
+
+### **3️⃣ Start Your App in Codespaces**
+Run:
+```
+docker-compose up --build
+```
+- This will **launch MongoDB & the app**
+- **Auth Server runs on port 3001**
+- **Frontend on port 3000**
+
+### **4️⃣ Test Authentication & Role Access**
+
+Now students with emotional disturbance can have **custom accommodations** tailored to their needs! 🎯
+
+Would you like to **integrate a progress-tracking dashboard** next? 📊
