@@ -41,7 +41,8 @@
 		"vscode": {
 			"extensions": [
 				"dugajean.dockr-vscode",
-				"formulahendry.docker-extension-pack"
+				"formulahendry.docker-extension-pack",
+				"DEVSENSE.phptools-vscode"
 			]
 		}
 	}
