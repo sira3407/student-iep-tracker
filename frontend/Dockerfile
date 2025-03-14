@@ -1,18 +1,10 @@
-# Use Node.js base image
-FROM node:18-alpine
-
-# Set working directory
-WORKDIR /app
-
-# Copy package files and install dependencies
-COPY package.json package-lock.json ./
-RUN npm install
-
-# Copy the rest of the application
+FROM node:lts-alpine
+ENV NODE_ENV=production
+WORKDIR /usr/src/app
+COPY ["package.json", "package-lock.json*", "npm-shrinkwrap.json*", "./"]
+RUN npm install --production --silent && mv node_modules ../
 COPY . .
-
-# Expose the port React runs on
-EXPOSE 3001
-
-# Start the frontend application
+EXPOSE 3000
+RUN chown -R node /usr/src/app
+USER node
 CMD ["npm", "start"]
