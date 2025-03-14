@@ -42,7 +42,8 @@
 			"extensions": [
 				"dugajean.dockr-vscode",
 				"formulahendry.docker-extension-pack",
-				"DEVSENSE.phptools-vscode"
+				"DEVSENSE.phptools-vscode",
+				"SonarSource.sonarlint-vscode"
 			]
 		}
 	}

@@ -39,12 +39,8 @@ services:
 
 volumes:
   mongo_data:
-```
-
-```
 
 ### Frontend Structure
-```
 /frontend
   ├── src/
   │   ├── components/
@@ -56,10 +52,8 @@ volumes:
   │   ├── index.js
   ├── package.json
   ├── public/
-```
 
-### Example: Login Component (`frontend/src/components/Login.js`)
-```javascript
+### Example: Login Component (frontend/src/components/Login.js)
 import { useState } from "react";
 import axios from "axios";
 
@@ -85,14 +79,11 @@ export default function Login() {
     </div>
   );
 }
-```
 
 ### Running the Full App
 Once the frontend is set up, start everything with:
-```
 docker-compose up --build
-```
 
-Now you have a **full-stack IEP tracker** with authentication & accommodations! 🚀
+Now you have a full-stack IEP tracker with authentication & accommodations! 🚀
 
-Would you like to **add goal progress tracking next?** 📊
+Would you like to add goal progress tracking next? 📊
