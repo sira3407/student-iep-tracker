@@ -1,11 +1,20 @@
-FROM node:lts-alpine
-ENV NODE_ENV=production
-WORKDIR /usr/src/app
-COPY ["package.json", "package-lock.json*", "npm-shrinkwrap.json*", "./"]
-RUN npm install --production --silent && mv node_modules ../
+# Use Node 14 or higher
+FROM node:14
+
+# Set working directory
+WORKDIR /app
+
+# Copy package.json and package-lock.json
+COPY package*.json ./
+
+# Install dependencies
+RUN npm install
+
+# Copy the rest of the application code
 COPY . .
-RUN mv ../node_modules ./node_modules
-EXPOSE 3000
-RUN chown -R node /usr/src/app
-USER node
+
+# Expose the application port
+EXPOSE 3001
+
+# Start the application
 CMD ["npm", "start"]
